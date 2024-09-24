@@ -19,6 +19,8 @@ export * from './interfaces/DeployContractResponse';
 export * from './events/NetEvent';
 export * from './events/predefined';
 
+export * from './libraries/BigInt';
+
 /** Types */
 export * from './generic/Map';
 export * from './interfaces/IBTC';

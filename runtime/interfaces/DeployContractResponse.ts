@@ -1,11 +1,11 @@
-import { u256 } from 'as-bignum/assembly';
 import { Address } from '../types/Address';
+import { BigInt } from '../libraries/BigInt';
 
 export class DeployContractResponse {
-    readonly virtualAddress: u256;
+    readonly virtualAddress: BigInt;
     readonly contractAddress: Address;
 
-    constructor(virtualAddress: u256, contractAddress: Address) {
+    constructor(virtualAddress: BigInt, contractAddress: Address) {
         this.virtualAddress = virtualAddress;
         this.contractAddress = contractAddress;
     }

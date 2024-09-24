@@ -1,6 +1,6 @@
-import { u256 } from 'as-bignum/assembly';
+import { BigInt } from '../libraries/BigInt';
 
-export function bytes(number: u256[]): Uint8Array {
+export function bytes(number: BigInt[]): Uint8Array {
     const result = new Uint8Array(32 * number.length);
     for (let i: u8 = 0; i < 32; i++) {
         const num: Uint8Array = number[31 - i].toUint8Array();
@@ -29,6 +29,6 @@ export function bytes8(number: Uint8Array): u64 {
     );
 }
 
-export function bytes32(number: Uint8Array): u256 {
-    return u256.fromBytes(number);
+export function bytes32(number: Uint8Array): BigInt {
+    return BigInt.fromBytes(number);
 }

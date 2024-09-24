@@ -1,4 +1,3 @@
-import { u256 } from 'as-bignum/assembly';
 import { BytesWriter } from '../buffer/BytesWriter';
 import { Blockchain } from '../env';
 import { ApproveEvent, BurnEvent, MintEvent, TransferEvent } from '../events/predefined';
@@ -15,6 +14,7 @@ import { Calldata } from '../universal/ABIRegistry';
 import { IOP_20 } from './interfaces/IOP_20';
 import { OP20InitParameters } from './interfaces/OP20InitParameters';
 import { OP_NET } from './OP_NET';
+import { BigInt } from '../libraries/BigInt';
 
 const maxSupplyPointer: u16 = Blockchain.nextPointer;
 const decimalsPointer: u16 = Blockchain.nextPointer;
@@ -25,8 +25,12 @@ const allowanceMapPointer: u16 = Blockchain.nextPointer;
 const balanceOfMapPointer: u16 = Blockchain.nextPointer;
 
 export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
-    protected readonly allowanceMap: MultiAddressMemoryMap<Address, Address, MemorySlotData<u256>>;
-    protected readonly balanceOfMap: AddressMemoryMap<Address, MemorySlotData<u256>>;
+    protected readonly allowanceMap: MultiAddressMemoryMap<
+        Address,
+        Address,
+        MemorySlotData<BigInt>
+    >;
+    protected readonly balanceOfMap: AddressMemoryMap<Address, MemorySlotData<BigInt>>;
 
     protected readonly _maxSupply: StoredU256;
     protected readonly _decimals: StoredU256;
@@ -36,20 +40,20 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
     protected constructor(params: OP20InitParameters | null = null) {
         super();
 
-        this.allowanceMap = new MultiAddressMemoryMap<Address, Address, MemorySlotData<u256>>(
+        this.allowanceMap = new MultiAddressMemoryMap<Address, Address, MemorySlotData<BigInt>>(
             allowanceMapPointer,
-            u256.Zero,
+            BigInt.ZERO,
         );
 
-        this.balanceOfMap = new AddressMemoryMap<Address, MemorySlotData<u256>>(
+        this.balanceOfMap = new AddressMemoryMap<Address, MemorySlotData<BigInt>>(
             balanceOfMapPointer,
-            u256.Zero,
+            BigInt.ZERO,
         );
 
-        this._totalSupply = new StoredU256(totalSupplyPointer, u256.Zero, u256.Zero);
+        this._totalSupply = new StoredU256(totalSupplyPointer, BigInt.ZERO, BigInt.ZERO);
 
-        this._maxSupply = new StoredU256(maxSupplyPointer, u256.Zero, u256.Zero);
-        this._decimals = new StoredU256(decimalsPointer, u256.Zero, u256.Zero);
+        this._maxSupply = new StoredU256(maxSupplyPointer, BigInt.ZERO, BigInt.ZERO);
+        this._decimals = new StoredU256(decimalsPointer, BigInt.ZERO, BigInt.ZERO);
 
         this._name = new StoredString(namePointer, '');
         this._symbol = new StoredString(symbolPointer, '');
@@ -61,11 +65,11 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
 
     public _totalSupply: StoredU256;
 
-    public get totalSupply(): u256 {
+    public get totalSupply(): BigInt {
         return this._totalSupply.value;
     }
 
-    public get maxSupply(): u256 {
+    public get maxSupply(): BigInt {
         if (!this._maxSupply) throw new Revert('Max supply not set');
 
         return this._maxSupply.value;
@@ -101,7 +105,7 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         }
 
         this._maxSupply.value = params.maxSupply;
-        this._decimals.value = u256.fromU32(u32(params.decimals));
+        this._decimals.value = BigInt.fromU32(u32(params.decimals));
         this._name.value = params.name;
         this._symbol.value = params.symbol;
     }
@@ -228,13 +232,13 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
     }
 
     /** REDEFINED METHODS */
-    protected _allowance(owner: Address, spender: Address): u256 {
+    protected _allowance(owner: Address, spender: Address): BigInt {
         const senderMap = this.allowanceMap.get(owner);
 
         return senderMap.get(spender);
     }
 
-    protected _approve(owner: Address, spender: Address, value: u256): boolean {
+    protected _approve(owner: Address, spender: Address, value: BigInt): boolean {
         if (owner === Blockchain.DEAD_ADDRESS || spender === Blockchain.DEAD_ADDRESS) {
             throw new Revert('Cannot approve from or to dead address');
         }
@@ -247,15 +251,15 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return true;
     }
 
-    protected _balanceOf(owner: Address): u256 {
+    protected _balanceOf(owner: Address): BigInt {
         const hasAddress = this.balanceOfMap.has(owner);
-        if (!hasAddress) return u256.Zero;
+        if (!hasAddress) return BigInt.ZERO;
 
         return this.balanceOfMap.get(owner);
     }
 
-    protected _burn(value: u256, onlyOwner: boolean = true): boolean {
-        if (u256.eq(value, u256.Zero)) {
+    protected _burn(value: BigInt, onlyOwner: boolean = true): boolean {
+        if (BigInt.eq(value, BigInt.ZERO)) {
             throw new Revert(`No tokens`);
         }
 
@@ -264,10 +268,10 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         if (this._totalSupply.value < value) throw new Revert(`Insufficient total supply.`);
         if (!this.balanceOfMap.has(Blockchain.msgSender)) throw new Revert('No balance');
 
-        const balance: u256 = this.balanceOfMap.get(Blockchain.msgSender);
+        const balance: BigInt = this.balanceOfMap.get(Blockchain.msgSender);
         if (balance < value) throw new Revert(`Insufficient balance`);
 
-        const newBalance: u256 = SafeMath.sub(balance, value);
+        const newBalance: BigInt = SafeMath.sub(balance, value);
         this.balanceOfMap.set(Blockchain.msgSender, newBalance);
 
         // @ts-expect-error TODO: Fix the typing because this is valid assembly-script syntax
@@ -277,14 +281,14 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return true;
     }
 
-    protected _mint(to: Address, value: u256, onlyOwner: boolean = true): boolean {
+    protected _mint(to: Address, value: BigInt, onlyOwner: boolean = true): boolean {
         if (onlyOwner) this.onlyOwner(Blockchain.msgSender);
 
         if (!this.balanceOfMap.has(to)) {
             this.balanceOfMap.set(to, value);
         } else {
-            const toBalance: u256 = this.balanceOfMap.get(to);
-            const newToBalance: u256 = SafeMath.add(toBalance, value);
+            const toBalance: BigInt = this.balanceOfMap.get(to);
+            const newToBalance: BigInt = SafeMath.add(toBalance, value);
 
             this.balanceOfMap.set(to, newToBalance);
         }
@@ -298,24 +302,24 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return true;
     }
 
-    protected _transfer(to: string, value: u256): boolean {
+    protected _transfer(to: string, value: BigInt): boolean {
         const sender = Blockchain.msgSender;
 
         if (!this.balanceOfMap.has(sender)) throw new Revert();
         if (this.isSelf(sender)) throw new Revert('Can not transfer from self account');
 
-        if (u256.eq(value, u256.Zero)) {
+        if (BigInt.eq(value, BigInt.ZERO)) {
             throw new Revert(`Cannot transfer 0 tokens`);
         }
 
-        const balance: u256 = this.balanceOfMap.get(sender);
+        const balance: BigInt = this.balanceOfMap.get(sender);
         if (balance < value) throw new Revert(`Insufficient balance`);
 
-        const newBalance: u256 = SafeMath.sub(balance, value);
+        const newBalance: BigInt = SafeMath.sub(balance, value);
         this.balanceOfMap.set(sender, newBalance);
 
-        const toBalance: u256 = this.balanceOfMap.get(to);
-        const newToBalance: u256 = SafeMath.add(toBalance, value);
+        const toBalance: BigInt = this.balanceOfMap.get(to);
+        const newToBalance: BigInt = SafeMath.add(toBalance, value);
 
         this.balanceOfMap.set(to, newToBalance);
 
@@ -325,21 +329,21 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
     }
 
     @unsafe
-    protected _unsafeTransferFrom(from: Address, to: Address, value: u256): boolean {
-        const balance: u256 = this.balanceOfMap.get(from);
+    protected _unsafeTransferFrom(from: Address, to: Address, value: BigInt): boolean {
+        const balance: BigInt = this.balanceOfMap.get(from);
         if (balance < value)
             throw new Revert(
                 `TransferFrom insufficient balance of ${from} is ${balance} and value is ${value}`,
             );
 
-        const newBalance: u256 = SafeMath.sub(balance, value);
+        const newBalance: BigInt = SafeMath.sub(balance, value);
         this.balanceOfMap.set(from, newBalance);
 
         if (!this.balanceOfMap.has(to)) {
             this.balanceOfMap.set(to, value);
         } else {
-            const toBalance: u256 = this.balanceOfMap.get(to);
-            const newToBalance: u256 = SafeMath.add(toBalance, value);
+            const toBalance: BigInt = this.balanceOfMap.get(to);
+            const newToBalance: BigInt = SafeMath.add(toBalance, value);
 
             this.balanceOfMap.set(to, newToBalance);
         }
@@ -349,7 +353,7 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return true;
     }
 
-    protected _transferFrom(from: Address, to: Address, value: u256): boolean {
+    protected _transferFrom(from: Address, to: Address, value: BigInt): boolean {
         if (to === Blockchain.DEAD_ADDRESS || from === Blockchain.DEAD_ADDRESS) {
             throw new Revert('Cannot transfer to or from dead address');
         }
@@ -360,9 +364,9 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return true;
     }
 
-    protected _spendAllowance(owner: Address, spender: Address, value: u256): void {
+    protected _spendAllowance(owner: Address, spender: Address, value: BigInt): void {
         const ownerAllowanceMap = this.allowanceMap.get(owner);
-        const allowed: u256 = ownerAllowanceMap.get(spender);
+        const allowed: BigInt = ownerAllowanceMap.get(spender);
 
         if (allowed < value) {
             throw new Revert(
@@ -370,31 +374,31 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
             );
         }
 
-        const newAllowance: u256 = SafeMath.sub(allowed, value);
+        const newAllowance: BigInt = SafeMath.sub(allowed, value);
         ownerAllowanceMap.set(spender, newAllowance);
 
         this.allowanceMap.set(owner, ownerAllowanceMap);
     }
 
-    protected createBurnEvent(value: u256): void {
+    protected createBurnEvent(value: BigInt): void {
         const burnEvent = new BurnEvent(value);
 
         this.emitEvent(burnEvent);
     }
 
-    protected createApproveEvent(owner: Address, spender: Address, value: u256): void {
+    protected createApproveEvent(owner: Address, spender: Address, value: BigInt): void {
         const approveEvent = new ApproveEvent(owner, spender, value);
 
         this.emitEvent(approveEvent);
     }
 
-    protected createMintEvent(owner: Address, value: u256): void {
+    protected createMintEvent(owner: Address, value: BigInt): void {
         const mintEvent = new MintEvent(owner, value);
 
         this.emitEvent(mintEvent);
     }
 
-    protected createTransferEvent(from: Address, to: Address, value: u256): void {
+    protected createTransferEvent(from: Address, to: Address, value: BigInt): void {
         const transferEvent = new TransferEvent(from, to, value);
 
         this.emitEvent(transferEvent);

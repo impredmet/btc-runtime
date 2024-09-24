@@ -1,28 +1,28 @@
-import { u256 } from 'as-bignum/assembly';
 import { SafeMath } from '../types/SafeMath';
 import { MemorySlotPointer } from '../memory/MemorySlotPointer';
 import { Blockchain } from '../env';
+import { BigInt } from '../libraries/BigInt';
 
 @final
 export class StoredU256 {
     constructor(
         public pointer: u16,
         public subPointer: MemorySlotPointer,
-        private defaultValue: u256,
+        private defaultValue: BigInt,
     ) {}
 
-    private _value: u256 = u256.Zero;
+    private _value: BigInt = BigInt.ZERO;
 
     @inline
-    public get value(): u256 {
+    public get value(): BigInt {
         this.ensureValue();
 
         return this._value;
     }
 
     @inline
-    public set value(value: u256) {
-        if (u256.eq(value, this._value)) {
+    public set value(value: BigInt) {
+        if (BigInt.eq(value, this._value)) {
             return;
         }
 
@@ -38,7 +38,7 @@ export class StoredU256 {
 
     @inline
     @operator('+')
-    public add(value: u256): this {
+    public add(value: BigInt): this {
         this.ensureValue();
 
         this._value = SafeMath.add(this._value, value);
@@ -49,7 +49,7 @@ export class StoredU256 {
 
     @inline
     @operator('-')
-    public sub(value: u256): this {
+    public sub(value: BigInt): this {
         this.ensureValue();
 
         this._value = SafeMath.sub(this._value, value);
@@ -60,7 +60,7 @@ export class StoredU256 {
 
     @inline
     @operator('*')
-    public mul(value: u256): this {
+    public mul(value: BigInt): this {
         this.ensureValue();
 
         this._value = SafeMath.mul(this._value, value);
@@ -71,7 +71,7 @@ export class StoredU256 {
 
     @inline
     @operator('==')
-    public eq(value: u256): boolean {
+    public eq(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value === value;
@@ -79,7 +79,7 @@ export class StoredU256 {
 
     @inline
     @operator('!=')
-    public ne(value: u256): boolean {
+    public ne(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value !== value;
@@ -87,7 +87,7 @@ export class StoredU256 {
 
     @inline
     @operator('<')
-    public lt(value: u256): boolean {
+    public lt(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value < value;
@@ -95,7 +95,7 @@ export class StoredU256 {
 
     @inline
     @operator('>')
-    public gt(value: u256): boolean {
+    public gt(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value > value;
@@ -103,7 +103,7 @@ export class StoredU256 {
 
     @inline
     @operator('<=')
-    public le(value: u256): boolean {
+    public le(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value <= value;
@@ -111,7 +111,7 @@ export class StoredU256 {
 
     @inline
     @operator('>=')
-    public ge(value: u256): boolean {
+    public ge(value: BigInt): boolean {
         this.ensureValue();
 
         return this._value >= value;
@@ -122,7 +122,7 @@ export class StoredU256 {
     public shr(value: i32): this {
         this.ensureValue();
 
-        this._value = u256.shr(this._value, value);
+        this._value = this._value.shr(value);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
@@ -130,10 +130,10 @@ export class StoredU256 {
 
     @inline
     @operator('&')
-    public and(value: u256): this {
+    public and(value: BigInt): this {
         this.ensureValue();
 
-        this._value = u256.and(this._value, value);
+        this._value = this._value.and(value);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
@@ -141,10 +141,10 @@ export class StoredU256 {
 
     @inline
     @operator('|')
-    public or(value: u256): this {
+    public or(value: BigInt): this {
         this.ensureValue();
 
-        this._value = u256.or(this._value, value);
+        this._value = this._value.or(value);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
@@ -152,10 +152,10 @@ export class StoredU256 {
 
     @inline
     @operator('^')
-    public xor(value: u256): this {
+    public xor(value: BigInt): this {
         this.ensureValue();
 
-        this._value = u256.xor(this._value, value);
+        this._value = this._value.xor(value);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
@@ -163,19 +163,19 @@ export class StoredU256 {
 
     @inline
     @operator('**')
-    public pow(value: u256): this {
+    public pow(value: BigInt): this {
         this.ensureValue();
 
         // code pow from scratch
-        let result: u256 = u256.One;
+        let result: BigInt = BigInt.ONE;
 
-        while (value > u256.Zero) {
-            if (u256.and(value, u256.One)) {
+        while (value > BigInt.ZERO) {
+            if (value.and(BigInt.ONE)) {
                 result = SafeMath.mul(result, this._value);
             }
 
             this._value = SafeMath.mul(this._value, this._value);
-            value = u256.shr(value, 1);
+            value = value.shr(1);
         }
 
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
@@ -185,21 +185,21 @@ export class StoredU256 {
 
     @inline
     @operator('%')
-    public mod(value: u256): this {
+    public mod(value: BigInt): this {
         this.ensureValue();
 
         // code mod from scratch
-        let result: u256 = u256.Zero;
-        let base: u256 = this._value;
-        let exp: u256 = value;
+        let result: BigInt = BigInt.ZERO;
+        let base: BigInt = this._value;
+        let exp: BigInt = value;
 
-        while (exp > u256.Zero) {
-            if (u256.and(exp, u256.One)) {
+        while (exp > BigInt.ZERO) {
+            if (exp.and(BigInt.ONE)) {
                 result = SafeMath.add(result, base);
             }
 
             base = SafeMath.add(base, base);
-            exp = u256.shr(exp, 1);
+            exp = exp.shr(1);
         }
 
         this._value = result;
@@ -213,7 +213,7 @@ export class StoredU256 {
     public inc(): this {
         this.ensureValue();
 
-        this._value = SafeMath.add(this._value, u256.One);
+        this._value = SafeMath.add(this._value, BigInt.ONE);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
@@ -224,14 +224,14 @@ export class StoredU256 {
     public dec(): this {
         this.ensureValue();
 
-        this._value = SafeMath.sub(this._value, u256.One);
+        this._value = SafeMath.sub(this._value, BigInt.ONE);
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);
 
         return this;
     }
 
     @inline
-    public set(value: u256): this {
+    public set(value: BigInt): this {
         this._value = value;
 
         Blockchain.setStorageAt(this.pointer, this.subPointer, this._value);

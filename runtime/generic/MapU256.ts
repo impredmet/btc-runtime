@@ -1,9 +1,9 @@
 import { Revert } from '../types/Revert';
-import { u256 } from 'as-bignum/assembly';
 import { Map } from './Map';
+import { BigInt } from '../libraries/BigInt';
 
-export class MapU256 extends Map<u256, u256> {
-    public set(key: u256, value: u256): void {
+export class MapU256 extends Map<BigInt, BigInt> {
+    public set(key: BigInt, value: BigInt): void {
         const index: i32 = this._keys.indexOf(key);
         if (index == -1) {
             this._keys.push(key);
@@ -13,11 +13,11 @@ export class MapU256 extends Map<u256, u256> {
         }
     }
 
-    public indexOf(pointerHash: u256): i32 {
+    public indexOf(pointerHash: BigInt): i32 {
         for (let i: i32 = 0; i < this._keys.length; i++) {
             const key = this._keys[i];
 
-            if (u256.eq(key, pointerHash)) {
+            if (BigInt.eq(key, pointerHash)) {
                 return i;
             }
         }
@@ -25,9 +25,9 @@ export class MapU256 extends Map<u256, u256> {
         return -1;
     }
 
-    public has(key: u256): bool {
+    public has(key: BigInt): bool {
         for (let i: i32 = 0; i < this._keys.length; i++) {
-            if (u256.eq(this._keys[i], key)) {
+            if (BigInt.eq(this._keys[i], key)) {
                 return true;
             }
         }
@@ -35,7 +35,7 @@ export class MapU256 extends Map<u256, u256> {
         return false;
     }
 
-    public get(key: u256): u256 {
+    public get(key: BigInt): BigInt {
         const index: i32 = this.indexOf(key);
         if (index == -1) {
             throw new Revert('Key not found in map');
@@ -43,7 +43,7 @@ export class MapU256 extends Map<u256, u256> {
         return this._values[index];
     }
 
-    public delete(key: u256): bool {
+    public delete(key: BigInt): bool {
         const index: i32 = this.indexOf(key);
         if (index == -1) {
             return false;

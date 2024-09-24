@@ -1,3 +1,3 @@
-import { u256 } from 'as-bignum/assembly';
+import { BigInt } from '../libraries/BigInt';
 
-export type MemorySlotPointer = u256;
+export type MemorySlotPointer = BigInt;

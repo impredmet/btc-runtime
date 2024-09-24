@@ -1,5 +1,5 @@
-import { u256 } from 'as-bignum/assembly';
 import { Blockchain } from '../env';
+import { BigInt } from '../libraries/BigInt';
 
 @final
 export class StoredBoolean {
@@ -8,7 +8,7 @@ export class StoredBoolean {
         private defaultValue: bool,
     ) {}
 
-    private _value: u256 = u256.Zero;
+    private _value: BigInt = BigInt.ZERO;
 
     @inline
     public get value(): bool {
@@ -19,16 +19,16 @@ export class StoredBoolean {
 
     @inline
     public set value(value: bool) {
-        this._value = value ? u256.One : u256.Zero;
+        this._value = value ? BigInt.ONE : BigInt.ZERO;
 
-        Blockchain.setStorageAt(this.pointer, u256.Zero, this._value);
+        Blockchain.setStorageAt(this.pointer, BigInt.ZERO, this._value);
     }
 
     @inline
-    public set(value: u256): this {
+    public set(value: BigInt): this {
         this._value = value;
 
-        Blockchain.setStorageAt(this.pointer, u256.Zero, this._value);
+        Blockchain.setStorageAt(this.pointer, BigInt.ZERO, this._value);
 
         return this;
     }
@@ -41,8 +41,8 @@ export class StoredBoolean {
     private ensureValue(): void {
         this._value = Blockchain.getStorageAt(
             this.pointer,
-            u256.Zero,
-            this.defaultValue ? u256.One : u256.Zero,
+            BigInt.ZERO,
+            this.defaultValue ? BigInt.ONE : BigInt.ZERO,
         );
     }
 }

@@ -1,7 +1,6 @@
 import { Address, PotentialAddress } from '../types/Address';
 import { MemorySlotPointer } from '../memory/MemorySlotPointer';
 import { MemorySlotData } from '../memory/MemorySlot';
-import { u256 } from 'as-bignum/assembly';
 import { ABIRegistry } from '../universal/ABIRegistry';
 import { BytesReader } from '../buffer/BytesReader';
 import { encodePointerHash } from '../math/abi';
@@ -21,6 +20,7 @@ import {
 } from './global';
 import { DeployContractResponse } from '../interfaces/DeployContractResponse';
 import { MapU256 } from '../generic/MapU256';
+import { BigInt } from '../libraries/BigInt';
 
 export * from '../env/global';
 
@@ -31,7 +31,7 @@ export class BlockchainEnvironment {
     public readonly DEAD_ADDRESS: Address = 'bc1dead';
     private storage: PointerStorage = new MapU256();
     private events: NetEvent[] = [];
-    private currentBlock: u256 = u256.Zero;
+    private currentBlock: BigInt = BigInt.ZERO;
 
     private _selfContract: Potential<OP_NET> = null;
 
@@ -105,7 +105,7 @@ export class BlockchainEnvironment {
         return this._contractAddress as Address;
     }
 
-    public get blockNumber(): u256 {
+    public get blockNumber(): BigInt {
         return this.currentBlock;
     }
 
@@ -118,11 +118,10 @@ export class BlockchainEnvironment {
 
         this._msgSender = reader.readAddress();
         this._txOrigin = reader.readAddress(); // "leftmost thing in the call chain"
-        this.currentBlock = reader.readU256();
 
+        this.currentBlock = reader.readU256();
         this._owner = reader.readAddress();
         this._contractAddress = reader.readAddress();
-
         this._timestamp = reader.readU64();
 
         this.createContractIfNotExists();
@@ -194,7 +193,7 @@ export class BlockchainEnvironment {
         return reader.readAddress();
     }
 
-    public deployContract(hash: u256, bytecode: Uint8Array): DeployContractResponse {
+    public deployContract(hash: BigInt, bytecode: Uint8Array): DeployContractResponse {
         const writer = new BytesWriter();
         writer.writeU256(hash);
         writer.writeBytes(bytecode);
@@ -203,7 +202,7 @@ export class BlockchainEnvironment {
         if (!cb) throw this.error('Failed to deploy contract');
 
         const reader: BytesReader = new BytesReader(cb as Uint8Array);
-        const virtualAddress: u256 = reader.readU256();
+        const virtualAddress: BigInt = reader.readU256();
         const contractAddress: Address = reader.readAddress();
 
         return new DeployContractResponse(virtualAddress, contractAddress);
@@ -211,7 +210,7 @@ export class BlockchainEnvironment {
 
     public deployContractFromExisting(
         existingAddress: Address,
-        salt: u256,
+        salt: BigInt,
     ): DeployContractResponse {
         const writer = new BytesWriter();
         writer.writeAddress(existingAddress);
@@ -222,7 +221,7 @@ export class BlockchainEnvironment {
         if (!cb) throw this.error('Failed to deploy contract');
 
         const reader: BytesReader = new BytesReader(cb as Uint8Array);
-        const virtualAddress: u256 = reader.readU256();
+        const virtualAddress: BigInt = reader.readU256();
         const contractAddress: Address = reader.readAddress();
 
         return new DeployContractResponse(virtualAddress, contractAddress);
@@ -231,8 +230,8 @@ export class BlockchainEnvironment {
     public getStorageAt(
         pointer: u16,
         subPointer: MemorySlotPointer,
-        defaultValue: MemorySlotData<u256>,
-    ): MemorySlotData<u256> {
+        defaultValue: MemorySlotData<BigInt>,
+    ): MemorySlotData<BigInt> {
         const pointerHash: MemorySlotPointer = encodePointerHash(pointer, subPointer);
         this.ensureStorageAtPointer(pointerHash, defaultValue);
 
@@ -245,17 +244,17 @@ export class BlockchainEnvironment {
 
     public hasStorageAt(pointer: u16, subPointer: MemorySlotPointer): bool {
         // We mark zero as the default value for the storage, if something is 0, the storage slot get deleted or is non-existent
-        const val: u256 = this.getStorageAt(pointer, subPointer, u256.Zero);
+        const val: BigInt = this.getStorageAt(pointer, subPointer, BigInt.ZERO);
 
-        return u256.ne(val, u256.Zero);
+        return BigInt.ne(val, BigInt.ZERO);
     }
 
     public setStorageAt(
         pointer: u16,
         keyPointer: MemorySlotPointer,
-        value: MemorySlotData<u256>,
+        value: MemorySlotData<BigInt>,
     ): void {
-        const pointerHash: u256 = encodePointerHash(pointer, keyPointer);
+        const pointerHash: BigInt = encodePointerHash(pointer, keyPointer);
 
         this._internalSetStorageAt(pointerHash, value);
     }
@@ -286,7 +285,7 @@ export class BlockchainEnvironment {
         return new Error(`${BlockchainEnvironment.runtimeException}: ${msg}`);
     }
 
-    private _internalSetStorageAt(pointerHash: u256, value: MemorySlotData<u256>): void {
+    private _internalSetStorageAt(pointerHash: BigInt, value: MemorySlotData<BigInt>): void {
         this.storage.set(pointerHash, value);
 
         const writer: BytesWriter = new BytesWriter();
@@ -309,18 +308,18 @@ export class BlockchainEnvironment {
         const result: Uint8Array = loadPointer(writer.getBuffer());
         const reader: BytesReader = new BytesReader(result);
 
-        const value: u256 = reader.readU256();
+        const value: BigInt = reader.readU256();
         this.storage.set(pointer, value); // cache the value
 
-        return !u256.eq(value, u256.Zero);
+        return !BigInt.eq(value, BigInt.ZERO);
     }
 
     private ensureStorageAtPointer(
         pointerHash: MemorySlotPointer,
-        defaultValue: MemorySlotData<u256>,
+        defaultValue: MemorySlotData<BigInt>,
     ): void {
         if (!this.hasPointerStorageHash(pointerHash)) {
-            if (u256.eq(defaultValue, u256.Zero)) {
+            if (BigInt.eq(defaultValue, BigInt.ZERO)) {
                 return;
             }
 

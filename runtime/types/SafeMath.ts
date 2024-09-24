@@ -1,27 +1,27 @@
-import { u256 } from 'as-bignum/assembly';
+import { BigInt } from '../libraries/BigInt';
 
 export class SafeMath {
-    public static ZERO: u256 = u256.fromU32(0);
+    public static ZERO: BigInt = BigInt.ZERO;
 
-    public static add(a: u256, b: u256): u256 {
-        const c: u256 = u256.add(a, b);
+    public static add(a: BigInt, b: BigInt): BigInt {
+        const c: BigInt = BigInt.add(a, b);
         if (c < a) {
             throw new Error('SafeMath: addition overflow');
         }
         return c;
     }
 
-    public static sub(a: u256, b: u256): u256 {
+    public static sub(a: BigInt, b: BigInt): BigInt {
         if (a < b) {
             throw new Error('SafeMath: subtraction overflow');
         }
 
-        return u256.sub(a, b);
+        return BigInt.sub(a, b);
     }
 
     // Computes (a * b) % modulus with full precision
-    public static mulmod(a: u256, b: u256, modulus: u256): u256 {
-        if (u256.eq(modulus, u256.Zero)) throw new Error('SafeMath: modulo by zero');
+    public static mulmod(a: BigInt, b: BigInt, modulus: BigInt): BigInt {
+        if (BigInt.eq(modulus, BigInt.ZERO)) throw new Error('SafeMath: modulo by zero');
 
         const mul = SafeMath.mul(a, b);
         return SafeMath.mod(mul, modulus);
@@ -30,28 +30,34 @@ export class SafeMath {
     @inline
     @unsafe
     @operator('%')
-    public static mod(a: u256, b: u256): u256 {
-        if (u256.eq(b, u256.Zero)) {
+    public static mod(a: BigInt, b: BigInt): BigInt {
+        if (BigInt.eq(b, BigInt.ZERO)) {
             throw new Error('SafeMath: modulo by zero');
         }
 
-        let result = a.clone();
-        while (u256.ge(result, b)) {
-            result = u256.sub(result, b);
+        return a.mod(b);
+
+        /*let result = a.copy();
+        while (BigInt.ge(result, b)) {
+            result = BigInt.sub(result, b);
         }
 
-        return result;
+        return result;*/
     }
 
-    public static mul(a: u256, b: u256): u256 {
+    public static mul(a: BigInt, b: BigInt): BigInt {
         if (a === SafeMath.ZERO || b === SafeMath.ZERO) {
             return SafeMath.ZERO;
         }
 
-        const c: u256 = u256.mul(a, b);
-        const d: u256 = SafeMath.div(c, a);
+        const c: BigInt = BigInt.mul(a, b);
+        /*const d: BigInt = BigInt.div(c, a); //SafeMath.div(c, a);
 
-        if (u256.ne(d, b)) {
+        if (BigInt.ne(d, b)) {
+            throw new Error('SafeMath: multiplication overflow');
+        }*/
+
+        if (c.gt(BigInt.MAX_SAFE_U256)) {
             throw new Error('SafeMath: multiplication overflow');
         }
 
@@ -61,81 +67,85 @@ export class SafeMath {
     @inline
     @unsafe
     @operator('/')
-    public static div(a: u256, b: u256): u256 {
-        if (b.isZero()) {
+    public static div(a: BigInt, b: BigInt): BigInt {
+        /*if (b.isZero()) {
             throw new Error('Division by zero');
         }
 
         if (a.isZero()) {
-            return new u256();
+            return BigInt.ZERO;
         }
 
-        if (u256.lt(a, b)) {
-            return new u256(); // Return 0 if a < b
+        if (BigInt.lt(a, b)) {
+            return BigInt.ZERO;
         }
 
-        if (u256.eq(a, b)) {
-            return new u256(1); // Return 1 if a == b
-        }
+        if (BigInt.eq(a, b)) {
+            return BigInt.ONE;
+        }*/
 
-        let n = a.clone();
+        return a.div(b);
+
+        /*let n = a.clone();
         let d = b.clone();
-        let result = new u256();
+        let result = new BigInt();
 
-        let shift = u256.clz(d) - u256.clz(n);
+        let shift = BigInt.clz(d) - BigInt.clz(n);
         d = SafeMath.shl(d, shift); // align d with n by shifting left
 
         for (let i = shift; i >= 0; i--) {
-            if (u256.ge(n, d)) {
-                n = u256.sub(n, d);
-                result = u256.or(result, SafeMath.shl(u256.One, i));
+            if (BigInt.ge(n, d)) {
+                n = BigInt.sub(n, d);
+                result = BigInt.or(result, SafeMath.shl(BigInt.ONE, i));
             }
-            d = u256.shr(d, 1); // restore d to original by shifting right
+            d = BigInt.shr(d, 1); // restore d to original by shifting right
         }
 
-        return result;
+        return result;*/
     }
 
-    public static min(a: u256, b: u256): u256 {
-        return u256.lt(a, b) ? a : b;
+    public static min(a: BigInt, b: BigInt): BigInt {
+        return BigInt.lt(a, b) ? a : b;
     }
 
-    public static max(a: u256, b: u256): u256 {
-        return u256.gt(a, b) ? a : b;
+    public static max(a: BigInt, b: BigInt): BigInt {
+        return BigInt.gt(a, b) ? a : b;
     }
 
     @inline
     @unsafe
-    public static sqrt(y: u256): u256 {
-        if (u256.gt(y, u256.fromU32(3))) {
+    public static sqrt(y: BigInt): BigInt {
+        /*if (BigInt.gt(y, BigInt.fromU32(3))) {
             let z = y;
 
-            let u246_2 = u256.fromU32(2);
+            let u246_2 = BigInt.fromU32(2);
 
             let d = SafeMath.div(y, u246_2);
-            let x = SafeMath.add(d, u256.One);
+            let x = SafeMath.add(d, BigInt.ONE);
 
-            while (u256.lt(x, z)) {
+            while (BigInt.lt(x, z)) {
                 z = x;
 
                 let u = SafeMath.div(y, x);
-                let y2 = u256.add(u, x);
+                let y2 = BigInt.add(u, x);
 
                 x = SafeMath.div(y2, u246_2);
             }
 
             return z;
-        } else if (!u256.eq(y, u256.Zero)) {
-            return u256.One;
+        } else if (!BigInt.eq(y, BigInt.ZERO)) {
+            return BigInt.ONE;
         } else {
-            return u256.Zero;
-        }
+            return BigInt.ZERO;
+        }*/
+
+        return y.sqrt();
     }
 
     @inline
     @unsafe
-    public static shl(value: u256, shift: i32): u256 {
-        if (shift == 0) {
+    public static shl(value: BigInt, shift: i32): BigInt {
+        /*if (shift == 0) {
             return value.clone();
         }
 
@@ -146,7 +156,7 @@ export class SafeMath {
         shift &= 255;
 
         if (shift >= totalBits) {
-            return new u256(); // Shift size larger than width results in zero
+            return new BigInt(); // Shift size larger than width results in zero
         }
 
         // Determine how many full 64-bit segments we are shifting
@@ -166,32 +176,34 @@ export class SafeMath {
             }
         }
 
-        return new u256(result[0], result[1], result[2], result[3]);
+        return new BigInt(result[0], result[1], result[2], result[3]);*/
+
+        return value.lsh(shift);
     }
 
-    public static and(a: u256, b: u256): u256 {
-        return u256.and(a, b);
+    public static and(a: BigInt, b: BigInt): BigInt {
+        return a.and(b);
     }
 
-    public static or(a: u256, b: u256): u256 {
-        return u256.or(a, b);
+    public static or(a: BigInt, b: BigInt): BigInt {
+        return a.or(b);
     }
 
-    public static xor(a: u256, b: u256): u256 {
-        return u256.xor(a, b);
+    public static xor(a: BigInt, b: BigInt): BigInt {
+        return a.xor(b);
     }
 
-    public static shr(a: u256, b: u32): u256 {
-        return u256.shr(a, b);
+    public static shr(a: BigInt, b: u32): BigInt {
+        return a.shr(b);
     }
 
     /**
-     * Increment a u256 value by 1
+     * Increment a BigInt value by 1
      * @param value The value to increment
      * @returns The incremented value
      */
-    @inline
-    static inc(value: u256): u256 {
-        return value.preInc();
-    }
+    /*@inline
+    static inc(value: BigInt): BigInt {
+        return value.
+    }*/
 }

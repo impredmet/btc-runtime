@@ -1,4 +1,3 @@
-import { u256 } from 'as-bignum/assembly';
 import { Address, ADDRESS_BYTE_LENGTH } from '../types/Address';
 import { Selector } from '../math/abi';
 import { BytesReader } from './BytesReader';
@@ -10,6 +9,7 @@ import { Revert } from '../types/Revert';
 import { Map } from '../generic/Map';
 import { BlockchainStorage, PointerStorage } from '../types';
 import { ArrayBuffer } from 'arraybuffer';
+import { BigInt } from '../libraries/BigInt';
 
 export enum BufferDataType {
     U8 = 0,
@@ -96,13 +96,13 @@ export class BytesWriter {
             this.writeAddress(address);
 
             const subKeys: MemorySlotPointer[] = storage.keys();
-            const subValues: MemorySlotData<u256>[] = storage.values();
+            const subValues: MemorySlotData<BigInt>[] = storage.values();
 
             this.writeU32(subKeys.length);
 
             for (let j: i32 = 0; j < subKeys.length; j++) {
                 const pointer: MemorySlotPointer = subKeys[j];
-                const value: MemorySlotData<u256> = subValues[j];
+                const value: MemorySlotData<BigInt> = subValues[j];
 
                 this.writeU256(pointer);
                 this.writeU256(value);
@@ -120,7 +120,7 @@ export class BytesWriter {
         this.writeU8(value ? 1 : 0);
     }
 
-    public writeU256(value: u256): void {
+    public writeU256(value: BigInt): void {
         if (this.trackDataTypes) this.selectorDatatype.push(u8(BufferDataType.U256));
         this.allocSafe(32);
 
@@ -130,7 +130,7 @@ export class BytesWriter {
         }
     }
 
-    public writeTuple(value: u256[]): void {
+    public writeTuple(value: BigInt[]): void {
         this.allocSafe(4 + value.length * 32);
         this.writeU32(u32(value.length));
 
@@ -199,14 +199,14 @@ export class BytesWriter {
         }
     }
 
-    public writeAddressValueTupleMap(map: Map<Address, u256>): void {
+    public writeAddressValueTupleMap(map: Map<Address, BigInt>): void {
         if (map.size > 65535) throw new Revert('Map size is too large');
         this.writeU16(u16(map.size));
 
         const keys = map.keys();
         for (let i = 0; i < keys.length; i++) {
             const key: Address = keys[i];
-            const value: u256 = map.get(key) || u256.Zero;
+            const value: BigInt = map.get(key) || BigInt.ZERO;
 
             this.writeAddress(key);
             this.writeU256(value);
