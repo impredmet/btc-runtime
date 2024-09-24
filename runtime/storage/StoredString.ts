@@ -1,6 +1,6 @@
-import { u256 } from 'as-bignum/assembly';
 import { Blockchain } from '../env';
 import { SafeMath } from '../types/SafeMath';
+import { safeU256 } from '../libraries/u256';
 
 @final
 export class StoredString {
@@ -45,10 +45,10 @@ export class StoredString {
         }
 
         // Prepare the header with the length of the string in the first 4 bytes
-        let header: u256 = u256.fromU32(length);
+        let header: safeU256 = safeU256.fromU32(length);
         header = SafeMath.shl(header, 224);
 
-        let currentPointer: u256 = u256.Zero;
+        let currentPointer: safeU256 = safeU256.Zero;
         let remainingLength: u32 = length;
         let offset: u32 = 0;
 
@@ -63,14 +63,14 @@ export class StoredString {
         // Save the remaining chunks in subsequent storage slots
         while (remainingLength > 0) {
             bytesToWrite = this.min(remainingLength, 32);
-            const storageValue: u256 = this.saveChunk(
-                u256.Zero,
+            const storageValue: safeU256 = this.saveChunk(
+                safeU256.Zero,
                 this._value,
                 offset,
                 bytesToWrite,
                 0,
             );
-            currentPointer = u256.add(currentPointer, u256.One);
+            currentPointer = safeU256.One.add(currentPointer);
             Blockchain.setStorageAt(this.pointer, currentPointer, storageValue);
 
             remainingLength -= bytesToWrite;
@@ -80,23 +80,27 @@ export class StoredString {
 
     // Helper method to save a chunk of the string into the storage slot
     private saveChunk(
-        storage: u256,
+        storage: safeU256,
         value: string,
         offset: u32,
         length: u32,
         storageOffset: u32,
-    ): u256 {
+    ): safeU256 {
         const bytes = storage.toBytes(true);
         for (let i: u32 = 0; i < length; i++) {
             const index: i32 = i32(offset + i);
             bytes[i + storageOffset] = u8(value.charCodeAt(index));
         }
-        return u256.fromBytes(bytes, true);
+        return safeU256.fromBytes(bytes, true);
     }
 
     private load(): void {
-        const header: u256 = Blockchain.getStorageAt(this.pointer, u256.Zero, u256.Zero);
-        if (u256.eq(header, u256.Zero)) {
+        const header: safeU256 = Blockchain.getStorageAt(
+            this.pointer,
+            safeU256.Zero,
+            safeU256.Zero,
+        );
+        if (safeU256.eq(header, safeU256.Zero)) {
             if (this.defaultValue) {
                 this.value = this.defaultValue;
             }
@@ -105,13 +109,13 @@ export class StoredString {
         }
 
         // the length of the string is stored in the first 4 bytes of the header
-        const bits: u256 = u256.shr(header, 224);
+        const bits: safeU256 = header.clone().shr(224);
         const length: u32 = bits.toU32();
 
         // the rest contains the string itself
-        let currentPointer: u256 = u256.Zero;
+        let currentPointer: safeU256 = safeU256.Zero;
         let remainingLength: u32 = length;
-        let currentStorage: u256 = header;
+        let currentStorage: safeU256 = header;
 
         const bytesToRead: u32 = this.min(remainingLength, 28);
         let str: string = this.loadChunk(currentStorage, 4, bytesToRead);
@@ -119,8 +123,8 @@ export class StoredString {
 
         while (remainingLength > 0) {
             // Move to the next storage slot
-            currentPointer = u256.add(currentPointer, u256.One);
-            currentStorage = Blockchain.getStorageAt(this.pointer, currentPointer, u256.Zero);
+            currentPointer = safeU256.One.add(currentPointer);
+            currentStorage = Blockchain.getStorageAt(this.pointer, currentPointer, safeU256.Zero);
 
             // Extract the relevant portion of the string from the current storage slot
             const bytesToRead: u32 = this.min(remainingLength, 32);
@@ -132,7 +136,7 @@ export class StoredString {
         this._value = str;
     }
 
-    private loadChunk(value: u256, offset: u32, length: u32): string {
+    private loadChunk(value: safeU256, offset: u32, length: u32): string {
         const bytes = value.toBytes(true);
 
         let str: string = '';

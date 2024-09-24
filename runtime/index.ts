@@ -15,6 +15,9 @@ export * from './buffer/BytesWriter';
 /** Interfaces */
 export * from './interfaces/DeployContractResponse';
 
+export * from './libraries/u512';
+export * from './libraries/u256';
+
 /** Events */
 export * from './events/NetEvent';
 export * from './events/predefined';

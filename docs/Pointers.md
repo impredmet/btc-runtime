@@ -24,7 +24,8 @@ locations are secure and resistant to tampering.
 
 **Sub-Pointer:**
 
-- The sub-pointer is a `u256` value that refines the storage location within the slot identified by the primary pointer.
+- The sub-pointer is a `safeU256` value that refines the storage location within the slot identified by the primary
+  pointer.
 
 **Encoding and Hashing:**
 
@@ -57,10 +58,10 @@ export function encodePointer(str: string): MemorySlotPointer {
 
 #### **2. Combining Pointer and Sub-Pointer**
 
-To combine a primary pointer (`u16`) and a sub-pointer (`u256`), the following method is used:
+To combine a primary pointer (`u16`) and a sub-pointer (`safeU256`), the following method is used:
 
 ```typescript
-export function encodePointerHash(pointer: u16, sub: u256): MemorySlotPointer {
+export function encodePointerHash(pointer: u16, sub: safeU256): MemorySlotPointer {
     const finalBuffer: Uint8Array = new Uint8Array(34); // 2 bytes for pointer + 32 bytes for sub-pointer
     const mergedKey: u8[] = [u8(pointer & u16(0xff)), u8((pointer >> u16(8)) & u16(0xff))];
 
@@ -88,7 +89,7 @@ The `encodePointerHash` function combines these two values and hashes them to pr
 
 ```typescript
 const pointer: u16 = 0x01;
-const subPointer: u256 = u256.fromHexString("abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890");
+const subPointer: safeU256 = safeU256.fromHexString("abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890");
 
 const memorySlotPointer: MemorySlotPointer = encodePointerHash(pointer, subPointer);
 ```
@@ -117,7 +118,7 @@ This 32-byte value (`MemorySlotPointer`) is now the key used to store and retrie
 Here’s how this works in a practical contract scenario:
 
 ```typescript
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 import { Blockchain } from '@btc-vision/btc-runtime/runtime/env';
 import { MemorySlotPointer } from '@btc-vision/btc-runtime/runtime/memory/MemorySlotPointer';
 
@@ -130,14 +131,14 @@ class MyStorageContract {
         this.subPointer = encodePointer(subKey); // Encode a string into a sub-pointer
     }
 
-    public storeData(value: u256): void {
+    public storeData(value: safeU256): void {
         const storageKey = encodePointerHash(this.pointer, this.subPointer);
-        Blockchain.setStorageAt(storageKey, u256.Zero, value);
+        Blockchain.setStorageAt(storageKey, safeU256.Zero, value);
     }
 
-    public retrieveData(): u256 {
+    public retrieveData(): safeU256 {
         const storageKey = encodePointerHash(this.pointer, this.subPointer);
-        return Blockchain.getStorageAt(storageKey, u256.Zero, u256.Zero);
+        return Blockchain.getStorageAt(storageKey, safeU256.Zero, safeU256.Zero);
     }
 }
 ```

@@ -33,7 +33,8 @@ storage. Instead, storage in OP_NET is managed using explicit storage slots, whi
 ### 2. **Understanding Storage Slots in OP_NET**
 
 Storage slots in OP_NET are composed of a pointer (`u16`) and a sub-pointer (`MemorySlotPointer`), both of which
-are `u256` values. Each storage slot has associated proofs to ensure that the data is valid and not tampered with by bad
+are `safeU256` values. Each storage slot has associated proofs to ensure that the data is valid and not tampered with by
+bad
 actors. To store data in these slots, OP_NET provides several specialized classes, each designed to handle different
 types of data.
 
@@ -56,7 +57,7 @@ To persist data, you must use storage slots explicitly through the provided clas
 #### **1. StoredBoolean**
 
 `StoredBoolean` is a class that allows you to store a boolean value in a storage slot. The boolean value is represented
-as `u256.One` for `true` and `u256.Zero` for `false`.
+as `safeU256.One` for `true` and `safeU256.Zero` for `false`.
 
 ##### **Constructor Parameters:**
 
@@ -147,7 +148,8 @@ contract MyContract {
 
 #### **3. StoredU256**
 
-`StoredU256` is a class for storing `u256` values in storage slots. It supports basic arithmetic operations directly on
+`StoredU256` is a class for storing `safeU256` values in storage slots. It supports basic arithmetic operations directly
+on
 the stored values and ensures that the values are correctly persisted.
 
 ##### **Constructor Parameters:**
@@ -155,22 +157,22 @@ the stored values and ensures that the values are correctly persisted.
 - **pointer**: `u16` - The primary pointer to the storage slot.
 - **subPointer**: `MemorySlotPointer` - An additional pointer used for more granular control over storage within a
   primary slot.
-- **defaultValue**: `u256` - The default value to be used if no value is stored.
+- **defaultValue**: `safeU256` - The default value to be used if no value is stored.
 
 ##### **Example Usage:**
 
 ```typescript
 import { StoredU256, MemorySlotPointer } from '@btc-vision/btc-runtime/runtime';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class MyContract extends OP_NET {
-    private storedAmount: StoredU256 = new StoredU256(Blockchain.nextPointer, new MemorySlotPointer(0), u256.Zero);
+    private storedAmount: StoredU256 = new StoredU256(Blockchain.nextPointer, new MemorySlotPointer(0), safeU256.Zero);
 
-    public addAmount(amount: u256): void {
+    public addAmount(amount: safeU256): void {
         this.storedAmount.add(amount);
     }
 
-    public getAmount(): u256 {
+    public getAmount(): safeU256 {
         return this.storedAmount.value;
     }
 }
@@ -202,22 +204,22 @@ particularly useful for implementing simple key-value stores within a contract.
 ##### **Constructor Parameters:**
 
 - **pointer**: `u16` - The primary pointer to the storage slot.
-- **defaultValue**: `MemorySlotData<u256>` - The default value to return if no value is stored at a particular key.
+- **defaultValue**: `MemorySlotData<safeU256>` - The default value to return if no value is stored at a particular key.
 
 ##### **Example Usage:**
 
 ```typescript
 import { AddressMemoryMap } from '@btc-vision/btc-runtime/runtime';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class MyContract extends OP_NET {
-    private balances: AddressMemoryMap<string, u256> = new AddressMemoryMap(Blockchain.nextPointer, u256.Zero);
+    private balances: AddressMemoryMap<string, safeU256> = new AddressMemoryMap(Blockchain.nextPointer, safeU256.Zero);
 
-    public setBalance(address: string, balance: u256): void {
+    public setBalance(address: string, balance: safeU256): void {
         this.balances.set(address, balance);
     }
 
-    public getBalance(address: string): u256 {
+    public getBalance(address: string): safeU256 {
         return this.balances.get(address);
     }
 }
@@ -249,22 +251,22 @@ a map, which is useful for multi-key mappings.
 ##### **Constructor Parameters:**
 
 - **pointer**: `u16` - The primary pointer to the storage slot.
-- **defaultValue**: `MemorySlotData<u256>` - The default value to return if no value is stored at a particular key.
+- **defaultValue**: `MemorySlotData<safeU256>` - The default value to return if no value is stored at a particular key.
 
 ##### **Example Usage:**
 
 ```typescript
 import { MultiAddressMemoryMap } from '@btc-vision/btc-runtime/runtime';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class MyContract extends OP_NET {
-    private allowances: MultiAddressMemoryMap<string, string, u256> = new MultiAddressMemoryMap(Blockchain.nextPointer, u256.Zero);
+    private allowances: MultiAddressMemoryMap<string, string, safeU256> = new MultiAddressMemoryMap(Blockchain.nextPointer, safeU256.Zero);
 
-    public setAllowance(owner: string, spender: string, amount: u256): void {
+    public setAllowance(owner: string, spender: string, amount: safeU256): void {
         this.allowances.setUpperKey(owner, spender, amount);
     }
 
-    public getAllowance(owner: string, spender: string): u256 {
+    public getAllowance(owner: string, spender: string): safeU256 {
         return this.allowances.get(owner).get(spender);
     }
 }
@@ -305,22 +307,22 @@ slot.
 
 ```typescript
 import { Serializable, BytesWriter, BytesReader, MemorySlotPointer, Address } from '@btc-vision/btc-runtime/runtime';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class ComplexDataProps {
-    public data: u256;
+    public data: safeU256;
     public address: Address;
 
-    constructor(data: u256, address: Address) {
+    constructor(data: safeU256, address: Address) {
         this.data = data;
         this.address = address;
     }
 }
 
 class ComplexData extends Serializable {
-    private data: u256;
+    private data: safeU256;
 
-    constructor(pointer: u16, subPointer: MemorySlotPointer, data: u256, address: Address) {
+    constructor(pointer: u16, subPointer: MemorySlotPointer, data: safeU256, address: Address) {
         super(pointer, subPointer);
         this.data = data;
     }
@@ -357,7 +359,7 @@ class ComplexData extends Serializable {
 
 ```typescript
 import { ComplexData } from './ComplexData'; // Assuming ComplexData is in the same directory
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 import { OP_NET, MemorySlotPointer } from '@btc-vision/btc-runtime/runtime';
 
 class MyContract extends OP_NET {
@@ -367,8 +369,8 @@ class MyContract extends OP_NET {
         super();
 
         const pointer: u16 = Blockchain.nextPointer;
-        const subPointer: MemorySlotPointer = u256.fromU32(1); // Sub-pointer example
-        const initialValue: u256 = u256.fromU32(42); // Example initial value
+        const subPointer: MemorySlotPointer = safeU256.fromU32(1); // Sub-pointer example
+        const initialValue: safeU256 = safeU256.fromU32(42); // Example initial value
 
         // Initialize ComplexData with the specified pointer, subPointer, and initial value
         this.complexStorage = new ComplexData(pointer, subPointer, initialValue, "");
@@ -377,7 +379,7 @@ class MyContract extends OP_NET {
         this.complexStorage.load();
     }
 
-    private updateComplexData(newValue: u256, newAddress: Address): void {
+    private updateComplexData(newValue: safeU256, newAddress: Address): void {
         // Update the value stored in ComplexData
         this.complexStorage.setData(newValue, newAddress);
     }

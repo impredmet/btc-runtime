@@ -1,11 +1,11 @@
 import { MemorySlotData } from './MemorySlot';
-import { u256 } from 'as-bignum/assembly';
 import { Blockchain } from '../env';
 import { MemorySlotPointer } from './MemorySlotPointer';
 import { encodePointer } from '../math/abi';
+import { safeU256 } from '../libraries/u256';
 
 @final
-export class KeyMerger<K extends string, K2 extends string, V extends MemorySlotData<u256>> {
+export class KeyMerger<K extends string, K2 extends string, V extends MemorySlotData<safeU256>> {
     public parentKey: K;
 
     public pointer: u16;
@@ -29,7 +29,7 @@ export class KeyMerger<K extends string, K2 extends string, V extends MemorySlot
         return this;
     }
 
-    public get(key: K): MemorySlotData<u256> {
+    public get(key: K): MemorySlotData<safeU256> {
         const mergedKey: string = `${this.parentKey}${key}`;
 
         return Blockchain.getStorageAt(this.pointer, encodePointer(mergedKey), this.defaultValue);

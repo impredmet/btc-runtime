@@ -1,8 +1,8 @@
 import { Address, ADDRESS_BYTE_LENGTH } from '../types/Address';
 import { Selector } from '../math/abi';
-import { u256 } from 'as-bignum/assembly';
 import { Revert } from '../types/Revert';
 import { Map } from '../generic/Map';
+import { safeU256 } from '../libraries/u256';
 
 @final
 export class BytesReader {
@@ -46,13 +46,13 @@ export class BytesReader {
         return value;
     }
 
-    public readU256(): u256 {
+    public readU256(): safeU256 {
         const next32Bytes: u8[] = [];
         for (let i = 0; i < 32; i++) {
             next32Bytes[i] = this.readU8();
         }
 
-        return u256.fromBytesBE(next32Bytes);
+        return safeU256.fromBytesBE(next32Bytes);
     }
 
     public readBytes(length: u32, zeroStop: boolean = false): Uint8Array {
@@ -106,9 +106,9 @@ export class BytesReader {
         return String.UTF8.decode(bytes.buffer);
     }
 
-    public readTuple(): u256[] {
+    public readTuple(): safeU256[] {
         const length = this.readU32();
-        const result: u256[] = new Array<u256>(length);
+        const result: safeU256[] = new Array<safeU256>(length);
 
         for (let i: u32 = 0; i < length; i++) {
             result[i] = this.readU256();
@@ -117,9 +117,9 @@ export class BytesReader {
         return result;
     }
 
-    public readAddressValueTuple(): Map<Address, u256> {
+    public readAddressValueTuple(): Map<Address, safeU256> {
         const length: u16 = this.readU16();
-        const result = new Map<Address, u256>();
+        const result = new Map<Address, safeU256>();
 
         for (let i: u16 = 0; i < length; i++) {
             const address = this.readAddress();

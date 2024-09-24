@@ -63,10 +63,10 @@ Let's say you want to create an event that logs transfers within your contract:
 import { NetEvent, MAX_EVENT_DATA_SIZE } from '../events/NetEvent';
 import { BytesWriter } from '../buffer/BytesWriter';
 import { Address } from '../types/Address';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class TransferEvent extends NetEvent {
-    constructor(from: Address, to: Address, amount: u256) {
+    constructor(from: Address, to: Address, amount: safeU256) {
         const writer = new BytesWriter();
         writer.writeAddress(from);
         writer.writeAddress(to);
@@ -92,11 +92,11 @@ the `OP_NET` class.
 
 ```typescript
 import { Address } from '../types/Address';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from 'as-bignum/assembly';
 
 class MyTokenContract extends OP_NET {
     // Assume this method is called when a transfer occurs
-    private transfer(from: Address, to: Address, amount: u256): void {
+    private transfer(from: Address, to: Address, amount: safeU256): void {
         // Perform the transfer logic...
 
         // Emit the Transfer event

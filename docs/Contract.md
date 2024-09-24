@@ -24,7 +24,7 @@ Solidity.
 #### **Example: Proper Use of Constructor and `onInstantiated`**
 
 ```typescript
-import { u128, u256 } from 'as-bignum/assembly';
+import { u128, safeU256 } from 'as-bignum/assembly';
 import {
     Address, Blockchain,
     BytesWriter,
@@ -49,7 +49,7 @@ export class MyToken extends DeployableOP_20 {
         if (!this.isInstantiated) {
             super.onInstantiated(); // IMPORTANT: Call the parent class's onInstantiated.
 
-            const maxSupply: u256 = u128.fromString('100000000000000000000000000').toU256(); // Your max supply.
+            const maxSupply: safeU256 = u128.fromString('100000000000000000000000000').toU256(); // Your max supply.
             const decimals: u8 = 18; // Your decimals.
             const name: string = 'MyToken'; // Your token name.
             const symbol: string = 'TOKEN'; // Your token symbol.
@@ -71,7 +71,7 @@ export class MyToken extends DeployableOP_20 {
     }
 
     private airdrop(calldata: Calldata): BytesWriter {
-        const drops: Map<Address, u256> = calldata.readAddressValueTuple();
+        const drops: Map<Address, safeU256> = calldata.readAddressValueTuple();
 
         const addresses: Address[] = drops.keys();
         for (let i: i32 = 0; i < addresses.length; i++) {
@@ -206,18 +206,24 @@ ABIRegistry.defineGetterSelector('myProperty', false);
 Implement the view method in your contract:
 
 ```typescript
-public override callView(method: Selector): BytesWriter {
-   const response = new BytesWriter();
+public override
+callView(method
+:
+Selector
+):
+BytesWriter
+{
+    const response = new BytesWriter();
 
-   switch (method) {
-       case encodeSelector('myProperty'):
-           response.writeString('My view method response');
-           break;
-       default:
-           return super.callView(method);
-   }
+    switch (method) {
+        case encodeSelector('myProperty'):
+            response.writeString('My view method response');
+            break;
+        default:
+            return super.callView(method);
+    }
 
-   return response;
+    return response;
 }
 ```
 
@@ -231,7 +237,15 @@ involves decoding the calldata, performing the desired operations, and returning
 ##### **Example: Adding an Airdrop Method**
 
 ```typescript
-public override callMethod(method: Selector, calldata: Calldata): BytesWriter {
+public override
+callMethod(method
+:
+Selector, calldata
+:
+Calldata
+):
+BytesWriter
+{
     switch (method) {
         case encodeSelector('airdrop'):
             return this.airdrop(calldata);
@@ -240,8 +254,14 @@ public override callMethod(method: Selector, calldata: Calldata): BytesWriter {
     }
 }
 
-private airdrop(calldata: Calldata): BytesWriter {
-    const drops: Map<Address, u256> = calldata.readAddressValueTuple();
+private
+airdrop(calldata
+:
+Calldata
+):
+BytesWriter
+{
+    const drops: Map<Address, safeU256> = calldata.readAddressValueTuple();
 
     const addresses: Address[] = drops.keys();
     for (let i: i32 = 0; i < addresses.length; i++) {
@@ -265,7 +285,13 @@ Views are read-only methods that allow external callers to query the state of yo
 ##### **Example: Adding a View Method**
 
 ```typescript
-public override callView(method: Selector): BytesWriter {
+public override
+callView(method
+:
+Selector
+):
+BytesWriter
+{
     const response = new BytesWriter();
 
     switch (method) {

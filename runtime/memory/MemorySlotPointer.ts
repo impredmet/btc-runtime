@@ -1,3 +1,3 @@
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from '../libraries/u256';
 
-export type MemorySlotPointer = u256;
+export type MemorySlotPointer = safeU256;

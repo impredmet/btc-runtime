@@ -1,12 +1,12 @@
 import { MemorySlotData } from './MemorySlot';
-import { u256 } from 'as-bignum/assembly';
 import { KeyMerger } from './KeyMerger';
+import { safeU256 } from '../libraries/u256';
 
 @final
 export class MultiAddressMemoryMap<
     K extends string,
     K2 extends string,
-    V extends MemorySlotData<u256>,
+    V extends MemorySlotData<safeU256>,
 > extends Map<K, KeyMerger<K, K2, V>> {
     public pointer: u16;
 

@@ -80,7 +80,7 @@ For a comprehensive explanation on how to define and use events, refer to the [E
 
 ### Pointers and Storage Management
 
-Storage in OPNet is managed using a combination of pointers (`u16`) and sub-pointers (`u256`). These are encoded and
+Storage in OPNet is managed using a combination of pointers (`u16`) and sub-pointers (`safeU256`). These are encoded and
 hashed to generate unique storage locations that are secure and verifiable. This approach ensures that the data stored
 is tamper-proof and can be efficiently accessed.
 
@@ -95,7 +95,7 @@ Here is a real-world example of how to create a basic token contract using the O
 contract follows the OP20 standard.
 
 ```typescript
-import { u128, u256 } from 'as-bignum/assembly';
+import { u128, safeU256 } from 'as-bignum/assembly';
 import {
     Address, Blockchain,
     BytesWriter,
@@ -120,7 +120,7 @@ export class MyToken extends DeployableOP_20 {
         if (!this.isInstantiated) {
             super.onInstantiated(); // IMPORTANT.
 
-            const maxSupply: u256 = u128.fromString('100000000000000000000000000').toU256(); // Your max supply.
+            const maxSupply: safeU256 = u128.fromString('100000000000000000000000000').toU256(); // Your max supply.
             const decimals: u8 = 18; // Your decimals.
             const name: string = 'MyToken'; // Your token name.
             const symbol: string = 'TOKEN'; // Your token symbol.
@@ -146,7 +146,7 @@ export class MyToken extends DeployableOP_20 {
 ```typescript
 class MyContract extends OP_NET {
     public someAction(): void {
-        const event = new CustomEvent(Blockchain.sender, u256.fromU32(100));
+        const event = new CustomEvent(Blockchain.sender, safeU256.fromU32(100));
         this.emitEvent(event);
     }
 }

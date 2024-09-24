@@ -88,12 +88,12 @@ usage examples.
       ```
 
 8. **blockNumber**
-    - **Type**: `u256`
+    - **Type**: `safeU256`
     - **Description**: The current block number as a 256-bit unsigned integer. This property is used to reference the
       block in which the contract is executing.
     - **Usage Example**:
       ```typescript
-      let currentBlockNum: u256 = Blockchain.blockNumber;
+      let currentBlockNum: safeU256 = Blockchain.blockNumber;
       Blockchain.log(`Current Block Number: ${currentBlockNum.toU64()}`);
       ```
 
@@ -154,37 +154,37 @@ usage examples.
       Blockchain.log(`Encoded Address: ${encodedAddr}`);
       ```
 
-5. **deployContract(hash: u256, bytecode: Uint8Array)**
+5. **deployContract(hash: safeU256, bytecode: Uint8Array)**
     - **Returns**: `DeployContractResponse`
     - **Description**: Deploys a new contract using the given hash and bytecode, returning a response that includes the
       virtual address and contract address. **Note: This method is not yet implemented.**
     - **Usage Example**:
       ```typescript
-      let contractHash = u256.fromString('someHash');
+      let contractHash = safeU256.fromString('someHash');
       let contractBytecode: Uint8Array = ...; // Bytecode of the contract
       let deployResponse = Blockchain.deployContract(contractHash, contractBytecode);
       Blockchain.log(`Deployed Contract Address: ${deployResponse.contractAddress}`);
       ```
 
-6. **deployContractFromExisting(existingAddress: Address, salt: u256)**
+6. **deployContractFromExisting(existingAddress: Address, salt: safeU256)**
     - **Returns**: `DeployContractResponse`
     - **Description**: Deploys a new contract based on an existing contract address and a salt value, allowing for
       predictable address generation and contract replication.
     - **Usage Example**:
       ```typescript
       let existingAddr: Address = ...; // Existing contract address
-      let salt = u256.fromString('someSalt');
+      let salt = safeU256.fromString('someSalt');
       let deployResponse = Blockchain.deployContractFromExisting(existingAddr, salt);
       Blockchain.log(`New Contract Address: ${deployResponse.contractAddress}`);
       ```
 
-7. **getStorageAt(pointer: u16, subPointer: MemorySlotPointer, defaultValue: MemorySlotData<u256>)**
-    - **Returns**: `MemorySlotData<u256>`
+7. **getStorageAt(pointer: u16, subPointer: MemorySlotPointer, defaultValue: MemorySlotData<safeU256>)**
+    - **Returns**: `MemorySlotData<safeU256>`
     - **Description**: Retrieves the value stored at the specified storage pointer and sub-pointer. This method is
       crucial for accessing persistent data within the contract's storage.
     - **Usage Example**:
       ```typescript
-      let value = Blockchain.getStorageAt(pointer, subPointer, u256.Zero);
+      let value = Blockchain.getStorageAt(pointer, subPointer, safeU256.Zero);
       Blockchain.log(`Stored Value: ${value}`);
       ```
 
@@ -198,12 +198,12 @@ usage examples.
       Blockchain.log(`Storage Exists: ${exists}`);
       ```
 
-9. **setStorageAt(pointer: u16, keyPointer: MemorySlotPointer, value: MemorySlotData<u256>)**
+9. **setStorageAt(pointer: u16, keyPointer: MemorySlotPointer, value: MemorySlotData<safeU256>)**
     - **Description**: Sets a value at the specified storage pointer and key pointer. This method is used to store
       persistent data in the contract's storage.
     - **Usage Example**:
       ```typescript
-      Blockchain.setStorageAt(pointer, keyPointer, new MemorySlotData<u256>(u256.fromU32(1000)));
+      Blockchain.setStorageAt(pointer, keyPointer, new MemorySlotData<safeU256>(safeU256.fromU32(1000)));
       ```
 
 ---

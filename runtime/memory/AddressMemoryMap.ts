@@ -2,10 +2,10 @@ import { MemorySlotPointer } from './MemorySlotPointer';
 import { Blockchain } from '../env';
 import { encodePointer } from '../math/abi';
 import { MemorySlotData } from './MemorySlot';
-import { u256 } from 'as-bignum/assembly';
+import { safeU256 } from '../libraries/u256';
 
 @final
-export class AddressMemoryMap<K extends string, V extends MemorySlotData<u256>> {
+export class AddressMemoryMap<K extends string, V extends MemorySlotData<safeU256>> {
     public pointer: u16;
 
     constructor(
@@ -22,7 +22,7 @@ export class AddressMemoryMap<K extends string, V extends MemorySlotData<u256>> 
         return this;
     }
 
-    public get(key: K): MemorySlotData<u256> {
+    public get(key: K): MemorySlotData<safeU256> {
         return Blockchain.getStorageAt(this.pointer, encodePointer(key), this.defaultValue);
     }
 
