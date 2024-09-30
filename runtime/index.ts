@@ -1,6 +1,9 @@
 /** Environment */
 export * from './env';
 
+/** Decorator */
+export * from 'opnet-callable/assembly';
+
 /** Contracts */
 export * from './contracts/interfaces/IOP_20';
 export * from './contracts/OP_20';

@@ -180,7 +180,8 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
         return response;
     }
 
-    public callMethod(method: Selector, calldata: Calldata): BytesWriter {
+    public callMethod(calldata: Calldata): BytesWriter {
+        const method = this.getMethod(calldata);
         switch (method) {
             case encodeSelector('allowance'):
                 return this.allowance(calldata);
@@ -197,7 +198,7 @@ export abstract class DeployableOP_20 extends OP_NET implements IOP_20 {
             case encodeSelector('transferFrom'):
                 return this.transferFrom(calldata);
             default:
-                return super.callMethod(method, calldata);
+                return super.callMethod(calldata);
         }
     }
 
