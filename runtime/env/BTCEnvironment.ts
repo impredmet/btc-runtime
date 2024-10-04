@@ -18,6 +18,7 @@ import {
     loadPointer,
     log,
     storePointer,
+    flushEvents,
 } from './global';
 import { DeployContractResponse } from '../interfaces/DeployContractResponse';
 import { MapU256 } from '../generic/MapU256';
@@ -162,7 +163,7 @@ export class BlockchainEnvironment {
         this.events.push(event);
     }
 
-    public getEvents(): Uint8Array {
+    private getEvents(): Uint8Array {
         const eventLength: u16 = u16(this.events.length);
         if (eventLength > MAX_EVENTS) {
             throw this.error('Too many events');
@@ -180,6 +181,10 @@ export class BlockchainEnvironment {
         }
 
         return buffer.getBuffer();
+    }
+
+    public flushEvents(): void {
+        flushEvents(this.getEvents());
     }
 
     public encodeVirtualAddress(virtualAddress: Uint8Array): Address {

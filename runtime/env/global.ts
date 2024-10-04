@@ -30,3 +30,7 @@ export declare function encodeAddress(data: Uint8Array): Uint8Array;
 // @ts-ignore
 @external('env', 'sha256')
 export declare function sha256(data: Uint8Array): Uint8Array;
+
+// @ts-ignore
+@external('env', 'flushEvents')
+export declare function flushEvents(data: Uint8Array): void;

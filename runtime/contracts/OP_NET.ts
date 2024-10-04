@@ -31,8 +31,11 @@ export class OP_NET implements IBTC {
             this.instantiated.value = true;
         }
     }
-
-    public callMethod(method: Selector, _calldata: Calldata): BytesWriter {
+    public getMethod(calldata: Calldata) {
+        return calldata.readSelector();
+    }
+    public callMethod(calldata: Calldata): BytesWriter {
+        const method = this.getMethod(calldata);
         switch (method) {
             default:
                 throw new Revert('Method not found');

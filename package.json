@@ -47,6 +47,7 @@
         "@eslint/js": "^9.10.0",
         "as-bignum": "^0.3.0",
         "gulplog": "^2.2.0",
+        "opnet-callable": "https://github.com/kungfuflex/opnet-callable",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.2",
         "typescript-eslint": "^8.6.0"
