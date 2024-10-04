@@ -31,7 +31,7 @@ export class OP_NET implements IBTC {
             this.instantiated.value = true;
         }
     }
-    public getMethod(calldata: Calldata) {
+    public getMethod(calldata: Calldata): Selector {
         return calldata.readSelector();
     }
     public callMethod(calldata: Calldata): BytesWriter {
